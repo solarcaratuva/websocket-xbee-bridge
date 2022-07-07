@@ -1,0 +1,4 @@
+digi-xbee==1.4.1
+pyserial==3.5
+websockets==10.3
+XBee==2.3.2
