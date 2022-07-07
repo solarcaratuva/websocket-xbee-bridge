@@ -1,13 +1,13 @@
 #!/usr/bin/env python
-import sys
+
 import asyncio
-import websockets
+import json
+import sys
 import time
+import websockets
 
 from digi.xbee.devices import XBeeDevice, RemoteXBeeDevice  
 from digi.xbee.models.address import XBee64BitAddress
-
-
 
 async def main():
     args = sys.argv[1:]
@@ -19,11 +19,16 @@ async def main():
     xbee.open()
 
     remote = RemoteXBeeDevice(xbee, XBee64BitAddress.from_hex_string("0013A20041C4ACC3"))
-    async with websockets.connect("ws://localhost:8080/ws") as websocket:
-        await websocket.recv()
-        xbee.send_data(remote, "testdata")
-        print("sent testdata")
 
+    uri = "ws://localhost:8080/ws"
+    async with websockets.connect(uri) as websocket:
+        subscribe_command = {"subscribe": [0x123, 0x201, 0x301, 0x315, 0x325, 0x406, 0x426]};
+        await websocket.send(json.dumps(subscribe_command))
+        print("sent subscribe command")
 
-if __name__ == "__main__":
-    asyncio.run(main())
+        while True:
+            data = await websocket.recv()
+            xbee.send_data(remote, data)
+            print(data)
+
+asyncio.run(main())
